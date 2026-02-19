@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Endless Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<!-- ✦ QW4: SVG book favicon (inline data URI) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='6' y='3' width='20' height='26' rx='2' fill='%235c3317'/><rect x='6' y='3' width='5' height='26' fill='%233d2008'/><rect x='9' y='8' width='13' height='2' rx='1' fill='%23c8a84b' opacity='.7'/><rect x='9' y='12' width='13' height='2' rx='1' fill='%23c8a84b' opacity='.5'/><rect x='9' y='16' width='9' height='2' rx='1' fill='%23c8a84b' opacity='.4'/></svg>">
+<style>
+/* ─────────────────────────────────────────
+   THEME TOKENS
+───────────────────────────────────────── */
+:root {
+  --page:   #f5edd8; --page2: #f0e6cc;
+  --ink:    #2a1f0e; --ink2:  #4a3728; --ink3: #7a6555;
+  --accent: #8b4513; --accent2: #c8860a;
+  --binding:#5c3317; --spine: #3d2008; --gold: #c8a84b;
+  --shadow: rgba(42,31,14,.18); --glow: rgba(200,168,75,.15);
+  --ch-bg:  rgba(139,69,19,.07); --ch-hov: rgba(139,69,19,.15);
+  --font-t: 'Cinzel Decorative',serif;
+  --font-h: 'Cormorant Garamond',serif;
+  --font-b: 'EB Garamond',serif;
+}
+[data-theme="scifi"]    { --page:#0a0e1a; --page2:#080c16; --ink:#c8e8ff; --ink2:#8ab8d8; --ink3:#4a6888; --accent:#00b4d8; --accent2:#48cae4; --binding:#001f3f; --spine:#00080f; --gold:#00b4d8; --ch-bg:rgba(0,180,216,.07); --ch-hov:rgba(0,180,216,.16); }
+[data-theme="horror"]   { --page:#0f0a0a; --page2:#0c0707; --ink:#e8d8d0; --ink2:#b89888; --ink3:#786858; --accent:#8b0000; --accent2:#cc2200; --binding:#1a0000; --spine:#0a0000; --gold:#8b0000; --ch-bg:rgba(139,0,0,.08); --ch-hov:rgba(139,0,0,.17); }
+[data-theme="romance"]  { --page:#fdf6f0; --page2:#f8ede3; --ink:#2d1b24; --ink2:#5c3a48; --ink3:#8c6878; --accent:#9b2257; --accent2:#c4517a; --binding:#6b1535; --spine:#4a0e25; --gold:#c4517a; --ch-bg:rgba(155,34,87,.06); --ch-hov:rgba(155,34,87,.14); }
+[data-theme="adventure"]{ --page:#f2e8d4; --page2:#ebe0c8; --ink:#1a2a18; --ink2:#3a5235; --ink3:#6a8260; --accent:#2d6a2d; --accent2:#4a9e3a; --binding:#1a3d18; --spine:#0f2610; --gold:#8fb84a; --ch-bg:rgba(45,106,45,.07); --ch-hov:rgba(45,106,45,.15); }
+
+/* ─────────────────────────────────────────
+   BASE
+───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#12100a;font-family:var(--font-b);color:var(--ink);overflow:hidden}
+
+.screen{display:none;width:100%;height:100%;position:absolute;inset:0}
+.screen.active{display:flex}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pageTurn{from{opacity:0;transform:perspective(900px) rotateY(6deg) translateX(14px)}to{opacity:1;transform:perspective(900px) rotateY(0) translateX(0)}}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes shimmer{0%{opacity:.4}50%{opacity:.9}100%{opacity:.4}}
+
+/* ─────────────────────────────────────────
+   API KEY SCREEN
+───────────────────────────────────────── */
+#screen-api{align-items:center;justify-content:center;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 40%,rgba(139,100,30,.1) 0%,transparent 60%),#12100a;z-index:10}
+
+.api-card{
+  background:#f5edd8;border:1px solid #c8a84b;border-radius:3px;
+  padding:48px 52px;max-width:460px;width:90%;text-align:center;
+  box-shadow:0 0 0 1px rgba(200,168,75,.2),0 24px 64px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.2);
+  position:relative;animation:fadeUp .5s ease;
+}
+.api-card::before{content:'❧';position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:#f5edd8;padding:0 12px;color:#c8a84b;font-size:22px;line-height:1}
+
+.api-title{font-family:'Cinzel Decorative',serif;font-size:26px;color:#2a1f0e;letter-spacing:2px;margin-bottom:6px}
+.api-sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:#7a6555;font-size:15px;margin-bottom:32px}
+.api-lbl{font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#7a6555;text-align:left;margin-bottom:8px}
+.api-in{width:100%;background:#f0e6cc;border:1px solid rgba(139,69,19,.25);border-radius:2px;
+  padding:12px 16px;font-family:'EB Garamond',serif;font-size:14px;color:#2a1f0e;outline:none;letter-spacing:1px;transition:border-color .2s}
+.api-in:focus{border-color:#c8a84b}.api-in.ok{border-color:#c8860a}
+.api-hint{font-family:'Cormorant Garamond',serif;font-size:12.5px;color:#7a6555;margin-top:10px;font-style:italic;text-align:left}
+.api-hint a{color:#c8860a;text-decoration:none;border-bottom:1px solid currentColor}
+.btn-p{width:100%;margin-top:24px;background:#5c3317;border:1px solid #c8a84b;color:#c8a84b;
+  font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;
+  padding:14px;cursor:pointer;border-radius:2px;transition:background .2s,color .2s}
+.btn-p:hover{background:#8b4513;color:#f5edd8}
+.api-skip{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:#7a6555;
+  margin-top:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;display:block}
+.api-skip:hover{color:#4a3728}
+
+/* ─────────────────────────────────────────
+   BOOKSHELF SCREEN
+───────────────────────────────────────── */
+#screen-shelf{
+  align-items:center;justify-content:center;flex-direction:column;gap:0;
+  background:
+    radial-gradient(ellipse at 50% 20%,rgba(139,100,30,.08) 0%,transparent 55%),
+    #12100a;
+  z-index:10;overflow:hidden;
+}
+
+.shelf-title-area{text-align:center;margin-bottom:32px;animation:fadeUp .5s ease}
+.shelf-title{font-family:'Cinzel Decorative',serif;font-size:32px;color:#c8a84b;
+  letter-spacing:3px;text-shadow:0 2px 24px rgba(200,168,75,.35)}
+.shelf-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(200,168,75,.5);
+  font-size:14px;margin-top:6px;letter-spacing:1px}
+
+/* The actual wooden shelf unit */
+.shelf-unit{
+  position:relative;width:860px;max-width:96vw;
+  animation:fadeUp .6s ease .1s both;
+}
+
+/* Shelf planks */
+.shelf-plank{
+  position:relative;
+  background:linear-gradient(180deg,#3d2808 0%,#2a1a04 40%,#1e1203 100%);
+  border-top:3px solid #5a3510;
+  border-bottom:2px solid #0f0800;
+  height:14px;
+  box-shadow:0 4px 18px rgba(0,0,0,.6),inset 0 1px 0 rgba(120,80,20,.3);
+  margin-top:2px;
+}
+.shelf-plank::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,0,0,.04) 60px,rgba(0,0,0,.04) 61px);
+}
+
+/* Side walls of the shelf */
+.shelf-wall-left,.shelf-wall-right{
+  position:absolute;bottom:0;top:0;width:18px;
+  background:linear-gradient(90deg,#2a1a04,#3d2808);
+  border:1px solid #5a3510;
+  z-index:20;
+}
+.shelf-wall-left{left:0;border-radius:2px 0 0 2px}
+.shelf-wall-right{right:0;border-radius:0 2px 2px 0}
+
+/* Row of books sitting on a plank */
+.book-row{
+  display:flex;align-items:flex-end;
+  padding:0 24px;
+  height:190px;gap:0;
+  position:relative;
+}
+
+/* Individual book on shelf */
+.shelf-book{
+  position:relative;cursor:pointer;flex-shrink:0;
+  transition:transform .22s ease,filter .22s ease;
+  transform-origin:bottom center;
+}
+.shelf-book:hover{transform:translateY(-8px) rotate(0deg);filter:brightness(1.15)}
+.shelf-book:hover .book-spine-title{opacity:1}
+
+/* Book body */
+.book-body{
+  position:relative;border-radius:1px 3px 3px 1px;
+  box-shadow:-2px 2px 8px rgba(0,0,0,.5),inset -3px 0 6px rgba(0,0,0,.2),1px 0 0 rgba(255,255,255,.06);
+  overflow:hidden;
+}
+
+/* Spine strip */
+.book-spine{
+  position:absolute;left:0;top:0;bottom:0;width:10px;
+  background:rgba(0,0,0,.25);border-right:1px solid rgba(255,255,255,.06);
+}
+
+/* Title on spine (rotated) */
+.book-spine-title{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:9px;letter-spacing:1.5px;
+  writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+  padding:8px 0;text-align:center;
+  color:rgba(255,255,255,.75);opacity:.6;transition:opacity .2s;
+  overflow:hidden;line-height:1.2;
+}
+
+/* Gold band at top of book */
+.book-band{
+  position:absolute;top:12px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(200,168,75,.4),transparent);
+}
+
+/* Lying-flat book (stacked) */
+.shelf-book.lying{
+  transform-origin:center left;
+}
+.shelf-book.lying .book-body{
+  border-radius:2px;
+  box-shadow:0 -2px 8px rgba(0,0,0,.4),inset 0 -2px 5px rgba(0,0,0,.15);
+}
+.shelf-book.lying:hover{transform:translateX(5px)}
+.shelf-book.lying .book-spine-title{
+  writing-mode:horizontal-tb;transform:none;font-size:8px;
+  top:auto;bottom:4px;padding:0 6px;letter-spacing:1px;
+}
+
+/* "New story" slot book */
+.shelf-book.new-slot .book-body{
+  background:rgba(255,255,255,.04)!important;
+  border:1px dashed rgba(200,168,75,.25)!important;
+  box-shadow:none!important;
+}
+.shelf-book.new-slot .book-spine-title{
+  opacity:.35;font-size:9px;letter-spacing:2px;
+}
+.shelf-book.new-slot:hover .book-body{
+  border-color:rgba(200,168,75,.5)!important;
+  background:rgba(200,168,75,.06)!important;
+}
+
+/* Slightly tilted books */
+.tilt-l{transform:rotate(-2deg);transform-origin:bottom right}
+.tilt-l:hover{transform:rotate(-2deg) translateY(-8px)!important}
+.tilt-r{transform:rotate(2deg);transform-origin:bottom left}
+.tilt-r:hover{transform:rotate(2deg) translateY(-8px)!important}
+.tilt-l2{transform:rotate(-4deg);transform-origin:bottom right}
+.tilt-l2:hover{transform:rotate(-4deg) translateY(-8px)!important}
+
+.shelf-footer-txt{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:12px;color:rgba(200,168,75,.3);margin-top:18px;letter-spacing:1px;text-align:center;
+}
+
+/* ─────────────────────────────────────────
+   NEW STORY SCREEN
+───────────────────────────────────────── */
+#screen-new{align-items:center;justify-content:center;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 40%,rgba(139,100,30,.08) 0%,transparent 55%),#12100a;z-index:10}
+
+.new-card{
+  background:var(--page);border:1px solid var(--gold);border-radius:3px;
+  padding:44px 48px;max-width:540px;width:92%;
+  box-shadow:0 24px 64px rgba(0,0,0,.65);position:relative;
+  animation:fadeUp .4s ease;
+}
+.new-card::before{
+  content:'✦  THE ENDLESS PAGE  ✦';
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:var(--page);padding:0 16px;color:var(--gold);
+  font-family:var(--font-h);font-size:10px;letter-spacing:3px;white-space:nowrap;
+}
+.new-h{font-family:var(--font-h);font-size:21px;font-weight:500;color:var(--ink);margin-bottom:22px;text-align:center}
+
+.mode-row{display:flex;gap:8px;margin-bottom:24px;background:var(--page2);
+  border:1px solid rgba(139,69,19,.2);border-radius:2px;padding:4px}
+.mode-btn{flex:1;padding:10px;border:none;background:none;font-family:var(--font-h);
+  font-size:13px;letter-spacing:1px;color:var(--ink3);cursor:pointer;border-radius:1px;transition:all .2s}
+.mode-btn.on{background:var(--binding);color:var(--gold)}
+
+.mode-desc{font-family:var(--font-h);font-style:italic;font-size:13px;color:var(--ink3);
+  margin-bottom:20px;text-align:center;min-height:36px;line-height:1.6}
+
+.fld-lbl{font-family:var(--font-h);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.premise-ta{width:100%;background:var(--page2);border:1px solid rgba(139,69,19,.25);border-radius:2px;
+  padding:14px 16px;font-family:var(--font-b);font-style:italic;font-size:15px;color:var(--ink);
+  outline:none;resize:none;height:96px;line-height:1.65;transition:border-color .2s}
+.premise-ta:focus{border-color:var(--gold)}
+.premise-ta::placeholder{color:var(--ink3);opacity:.55}
+
+.genre-row{font-family:var(--font-h);font-size:12px;color:var(--ink3);font-style:italic;margin-top:8px}
+.genre-row strong{color:var(--accent2)}
+.genre-row span{color:var(--accent2);cursor:pointer;text-decoration:underline;
+  text-underline-offset:2px;margin-right:8px}
+.genre-row span:hover{color:var(--accent)}
+
+.back-lnk{font-family:var(--font-h);font-style:italic;font-size:12px;color:var(--ink3);
+  text-align:center;margin-top:14px;cursor:pointer}
+.back-lnk:hover{color:var(--ink2)}
+.back-lnk span{text-decoration:underline;text-underline-offset:2px}
+
+/* ─────────────────────────────────────────
+   BOOK SCREEN
+───────────────────────────────────────── */
+#screen-book{
+  z-index:10;align-items:center;justify-content:center;
+  padding:16px 20px;flex-direction:column;gap:12px;
+  background:radial-gradient(ellipse at 20% 50%,rgba(139,100,30,.05),transparent 50%),
+             radial-gradient(ellipse at 80% 50%,rgba(139,100,30,.05),transparent 50%),
+             #12100a;
+}
+
+.book-topbar{display:flex;align-items:center;gap:12px;width:100%;max-width:1080px}
+.book-story-ttl{font-family:var(--font-h);font-size:13px;font-style:italic;
+  color:rgba(200,168,75,.65);letter-spacing:1px;flex:1;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis}
+.wc{font-family:var(--font-h);font-size:11px;letter-spacing:2px;color:rgba(200,168,75,.3)}
+.tb-btn{background:none;border:1px solid rgba(200,168,75,.2);color:rgba(200,168,75,.45);
+  font-family:var(--font-h);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  padding:5px 12px;border-radius:2px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tb-btn:hover{border-color:var(--gold);color:var(--gold)}
+.tb-btn.on{border-color:var(--accent2);color:var(--accent2)}
+
+/* Two-page book */
+.book{
+  display:flex;width:100%;max-width:1080px;
+  height:calc(100vh - 108px);max-height:700px;
+  filter:drop-shadow(0 20px 55px rgba(0,0,0,.65));
+  position:relative;
+}
+.book::after{
+  content:'';position:absolute;left:50%;top:0;bottom:0;width:22px;
+  transform:translateX(-50%);
+  background:linear-gradient(to right,rgba(0,0,0,.22) 0%,rgba(0,0,0,.04) 40%,rgba(0,0,0,.04) 60%,rgba(0,0,0,.22) 100%);
+  z-index:5;pointer-events:none;
+}
+
+.pg{
+  flex:1;background:var(--page);padding:36px 40px;
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+}
+.pg::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(139,69,19,.04) 27px,rgba(139,69,19,.04) 28px);
+  opacity:.5;
+}
+.pg::after{content:'';position:absolute;top:14px;left:14px;right:14px;bottom:14px;
+  border:1px solid rgba(139,69,19,.09);pointer-events:none;border-radius:1px}
+
+.pg-left{border-radius:3px 0 0 3px;background:var(--page2);
+  box-shadow:inset -3px 0 10px rgba(0,0,0,.1),inset 0 0 0 1px rgba(139,69,19,.1)}
+.pg-right{border-radius:0 3px 3px 0;
+  box-shadow:inset 3px 0 10px rgba(0,0,0,.05),inset 0 0 0 1px rgba(139,69,19,.1)}
+
+.pg-num{font-family:var(--font-h);font-size:11px;letter-spacing:2px;color:var(--ink3);
+  text-align:center;margin-bottom:16px;opacity:.55}
+.ch-head{font-family:var(--font-t);font-size:11px;letter-spacing:3px;color:var(--accent);
+  text-align:center;margin-bottom:16px;opacity:.7}
+
+/* ── Left page: scrollable history ── */
+.hist-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(139,69,19,.2) transparent}
+.hist-scroll::-webkit-scrollbar{width:3px}
+.hist-scroll::-webkit-scrollbar-thumb{background:rgba(139,69,19,.2);border-radius:2px}
+
+.hist-entry{
+  margin-bottom:18px;padding:10px 12px;border-radius:2px;cursor:pointer;
+  border:1px solid transparent;transition:all .18s;
+}
+.hist-entry:hover{background:var(--ch-bg);border-color:rgba(139,69,19,.15)}
+.hist-entry:hover .hist-read{opacity:1}
+
+.hist-who{font-family:var(--font-h);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.hist-who::before{content:'›'}
+.hist-snip{font-family:var(--font-b);font-size:13px;line-height:1.8;color:var(--ink2);
+  font-style:italic;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.hist-read{font-family:var(--font-h);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent2);margin-top:6px;opacity:0;transition:opacity .18s}
+
+.hist-empty{font-family:var(--font-h);font-style:italic;font-size:13px;color:var(--ink3);
+  text-align:center;padding-top:44px;opacity:.45;line-height:1.8}
+
+/* ── Right page: current + input ── */
+.story-cur{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(139,69,19,.2) transparent;margin-bottom:16px}
+.story-cur::-webkit-scrollbar{width:3px}
+.story-cur::-webkit-scrollbar-thumb{background:rgba(139,69,19,.2);border-radius:2px}
+
+.prose{font-family:var(--font-b);font-size:15.5px;line-height:2;color:var(--ink)}
+.prose p{margin-bottom:1.3em}
+.prose .drop::first-letter{font-family:var(--font-t);font-size:52px;float:left;
+  line-height:.88;margin:4px 8px 0 0;color:var(--accent)}
+
+.thinking-row{display:flex;align-items:center;gap:10px;font-family:var(--font-h);
+  font-style:italic;font-size:13px;color:var(--ink3);opacity:.65;padding:8px 0}
+.dots span{display:inline-block;width:5px;height:5px;background:var(--gold);border-radius:50%;
+  margin:0 2px;animation:pulse 1.4s ease-in-out infinite;opacity:.4}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+
+/* Choices */
+.choices-wrap{margin-top:18px}
+.choices-lbl{font-family:var(--font-h);font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--ink3);text-align:center;margin-bottom:8px;opacity:.55}
+.choice-btn{
+  display:block;width:100%;margin-bottom:7px;
+  background:var(--ch-bg);border:1px solid rgba(139,69,19,.15);
+  padding:10px 16px 10px 26px;font-family:var(--font-b);font-style:italic;
+  font-size:14.5px;color:var(--ink2);cursor:pointer;text-align:left;border-radius:2px;
+  transition:all .18s;line-height:1.4;position:relative;
+}
+.choice-btn::before{content:'›';position:absolute;left:11px;color:var(--accent2);font-style:normal}
+.choice-btn:hover{background:var(--ch-hov);border-color:rgba(139,69,19,.3);color:var(--ink);padding-left:30px}
+
+.orn{text-align:center;font-size:12px;color:var(--gold);margin:14px 0;
+  opacity:.4;letter-spacing:8px}
+
+/* Input area */
+.inp-area{border-top:1px solid rgba(139,69,19,.12);padding-top:14px;flex-shrink:0}
+.inp-row{display:flex;gap:8px;align-items:flex-end}
+.story-in{
+  flex:1;background:none;border:none;border-bottom:1px solid rgba(139,69,19,.2);
+  padding:7px 4px;font-family:var(--font-b);font-style:italic;font-size:15px;
+  color:var(--ink);outline:none;resize:none;min-height:34px;max-height:90px;
+  line-height:1.5;transition:border-color .2s;overflow:hidden;
+}
+.story-in:focus{border-color:var(--accent2)}
+.story-in::placeholder{color:var(--ink3);opacity:.45}
+.send-btn{background:none;border:1px solid rgba(139,69,19,.25);color:var(--accent2);
+  font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  border-radius:2px;cursor:pointer;flex-shrink:0;transition:all .18s}
+.send-btn:hover{background:var(--accent);color:var(--page);border-color:var(--accent)}
+/* ✦ QW2: disabled state for send button during generation */
+.send-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.tts-sm{background:none;border:1px solid rgba(139,69,19,.2);color:var(--ink3);
+  font-size:13px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  border-radius:2px;cursor:pointer;flex-shrink:0;transition:all .18s}
+.tts-sm:hover{border-color:var(--gold);color:var(--gold)}
+.tts-sm.on{color:var(--accent2);border-color:var(--accent2)}
+.inp-hint{font-family:var(--font-h);font-size:11px;letter-spacing:.5px;color:var(--ink3);
+  opacity:.4;margin-top:7px;font-style:italic}
+
+/* ─────────────────────────────────────────
+   CHAPTER MODAL
+───────────────────────────────────────── */
+#modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;
+  align-items:center;justify-content:center;padding:24px;
+}
+#modal-overlay.open{display:flex}
+
+.modal-card{
+  background:var(--page);border:1px solid var(--gold);border-radius:3px;
+  max-width:600px;width:100%;max-height:80vh;display:flex;flex-direction:column;
+  box-shadow:0 32px 80px rgba(0,0,0,.7);animation:fadeUp .3s ease;
+}
+.modal-head{
+  padding:20px 28px;border-bottom:1px solid rgba(139,69,19,.15);
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:600;color:var(--ink);flex:1}
+.modal-close{background:none;border:1px solid rgba(139,69,19,.2);color:var(--ink3);
+  width:28px;height:28px;border-radius:2px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.modal-close:hover{border-color:var(--accent);color:var(--accent)}
+.modal-body{
+  padding:24px 28px;overflow-y:auto;flex:1;
+  scrollbar-width:thin;scrollbar-color:rgba(139,69,19,.2) transparent;
+}
+.modal-body::-webkit-scrollbar{width:4px}
+.modal-body::-webkit-scrollbar-thumb{background:rgba(139,69,19,.2);border-radius:2px}
+.modal-action{
+  font-family:var(--font-h);font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:14px;
+}
+.modal-prose{font-family:var(--font-b);font-size:15px;line-height:2;color:var(--ink)}
+.modal-prose p{margin-bottom:1.3em}
+
+/* ─────────────────────────────────────────
+   OFFLINE BANNER & TOAST
+───────────────────────────────────────── */
+.offline-banner{
+  background:rgba(139,69,19,.1);border:1px solid rgba(139,69,19,.2);border-radius:2px;
+  padding:10px 16px;font-family:var(--font-h);font-style:italic;font-size:13px;
+  color:var(--ink3);text-align:center;margin-bottom:16px;
+}
+.offline-banner a{color:var(--accent2);text-decoration:underline;cursor:pointer}
+
+#toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  background:var(--binding);border:1px solid var(--gold);color:var(--gold);
+  font-family:var(--font-h);font-size:11px;letter-spacing:2px;padding:7px 18px;
+  border-radius:2px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;white-space:nowrap;
+}
+#toast.show{opacity:1}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media(max-width:680px){
+  .pg-left{display:none}.pg-right{border-radius:3px}.book::after{display:none}
+  .pg{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- API KEY -->
+<div class="screen active" id="screen-api">
+  <div class="api-card">
+    <div class="api-title">The Endless Page</div>
+    <div class="api-sub">Every story begins with a single word</div>
+    <div class="api-lbl">Gemini API Key</div>
+    <input class="api-in" id="api-field" type="password" placeholder="Paste your key here..." autocomplete="off" spellcheck="false">
+    <div class="api-hint">Stored locally, never shared. Free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></div>
+    <button class="btn-p" onclick="confirmKey()">Open the Book</button>
+    <span class="api-skip" onclick="skipKey()">Continue without AI — use placeholder prose</span>
+  </div>
+</div>
+
+<!-- BOOKSHELF -->
+<div class="screen" id="screen-shelf">
+  <div class="shelf-title-area">
+    <div class="shelf-title">The Endless Page</div>
+    <div class="shelf-tagline">Your stories, waiting to be told</div>
+  </div>
+  <div class="shelf-unit" id="shelf-unit">
+    <div class="shelf-wall-left"></div>
+    <div class="shelf-wall-right"></div>
+    <!-- rows injected by JS -->
+  </div>
+  <!-- ✦ QW6: version string added to shelf footer -->
+  <div class="shelf-footer-txt">✦ &nbsp; Stories saved to your browser &nbsp; ✦ &nbsp;·&nbsp; v2.2</div>
+</div>
+
+<!-- NEW STORY -->
+<div class="screen" id="screen-new">
+  <div class="new-card" id="new-card">
+    <div class="new-h">Begin a New Story</div>
+    <div class="mode-row">
+      <button class="mode-btn on" id="mb-guided" onclick="setMode('guided')">✦ Guided</button>
+      <button class="mode-btn" id="mb-sandbox" onclick="setMode('sandbox')">✧ Sandbox</button>
+    </div>
+    <div class="mode-desc" id="mode-desc">The narrator guides your story, offering three paths at each turn. You choose the direction.</div>
+    <div class="fld-lbl">Your Opening Premise</div>
+    <textarea class="premise-ta" id="premise-in" placeholder="Describe your world, character, or opening scene..." oninput="detectGenre(this.value)"></textarea>
+    <div class="genre-row" id="genre-row">
+      Tone: <strong id="genre-det">—</strong> &nbsp;·&nbsp; Choose:
+      <span onclick="setTheme('fantasy')">Fantasy</span>
+      <span onclick="setTheme('scifi')">Sci-fi</span>
+      <span onclick="setTheme('horror')">Horror</span>
+      <span onclick="setTheme('romance')">Romance</span>
+      <span onclick="setTheme('adventure')">Adventure</span>
+    </div>
+    <button class="btn-p" style="margin-top:20px" onclick="beginStory()">Turn to Page One →</button>
+    <div class="back-lnk" onclick="showShelf()">← <span>Return to your shelf</span></div>
+  </div>
+</div>
+
+<!-- BOOK -->
+<div class="screen" id="screen-book">
+  <div class="book-topbar">
+    <div class="book-story-ttl" id="book-title">Untitled</div>
+    <div class="wc" id="wc">0 words</div>
+    <button class="tb-btn" id="tts-tb" onclick="toggleTTS()">🔊 Listen</button>
+    <button class="tb-btn" onclick="openRenameModal(G.slot)" id="btn-rename">✎ Rename</button>
+    <!-- ✦ QW5: Download story as plain text -->
+    <button class="tb-btn" id="btn-download" onclick="downloadStory()">⬇ Download</button>
+    <button class="tb-btn" onclick="showShelf()">☰ Shelf</button>
+  </div>
+  <div class="book" id="book">
+    <!-- LEFT PAGE -->
+    <div class="pg pg-left">
+      <div class="pg-num" id="pgn-left">—</div>
+      <div class="ch-head" id="ch-head">The Story So Far</div>
+      <div class="hist-scroll" id="hist-scroll">
+        <div class="hist-empty">The pages of your past will appear here…</div>
+      </div>
+    </div>
+    <!-- RIGHT PAGE -->
+    <div class="pg pg-right">
+      <div class="pg-num" id="pgn-right">Page 1</div>
+      <div id="offline-banner" class="offline-banner" style="display:none">Running without AI — <a onclick="showScreen('screen-key')">add your Gemini key</a> for real narration</div>
+      <div class="story-cur" id="story-cur"></div>
+      <div class="inp-area">
+        <div class="inp-row">
+          <textarea class="story-in" id="story-in" placeholder="What do you do?" rows="1"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="tts-sm" id="tts-sm" onclick="toggleTTS()" title="Read aloud">🔊</button>
+          <button class="send-btn" id="send-btn" onclick="submitAction()" title="Continue">›</button>
+        </div>
+        <div class="inp-hint" id="inp-hint">Press Enter to continue · Shift+Enter for new line</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Chapter</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-action" id="modal-action"></div>
+      <div class="modal-prose" id="modal-prose"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div id="rename-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:110;align-items:center;justify-content:center;padding:24px" onclick="closeRenameModal(event)">
+  <div class="modal-card" id="rename-card" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-title">Rename Story</div>
+      <button class="modal-close" onclick="closeRenameModalDirect()">&#x2715;</button>
+    </div>
+    <div class="modal-body" style="padding:24px 28px">
+      <div class="fld-lbl" style="font-family:var(--font-h);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--ink3);margin-bottom:10px">New Title</div>
+      <input id="rename-input" type="text" maxlength="60" autocomplete="off" spellcheck="false"
+        style="width:100%;background:var(--page2);border:1px solid rgba(139,69,19,.25);border-radius:2px;padding:12px 14px;font-family:var(--font-b);font-style:italic;font-size:16px;color:var(--ink);outline:none;transition:border-color .2s"
+        onkeydown="if(event.key==='Enter')confirmRename()"
+        onfocus="this.style.borderColor='var(--gold)'"
+        onblur="this.style.borderColor='rgba(139,69,19,.25)'">
+      <button onclick="confirmRename()" style="width:100%;margin-top:16px;background:var(--binding);border:1px solid var(--gold);color:var(--gold);font-family:var(--font-h);font-size:13px;letter-spacing:3px;text-transform:uppercase;padding:12px;cursor:pointer;border-radius:2px;transition:background .2s"
+        onmouseover="this.style.background='var(--accent)';this.style.color='var(--page)'"
+        onmouseout="this.style.background='var(--binding)';this.style.color='var(--gold)'">
+        Save Title
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  Created by Max Steiner — github.com/LordJuvens
+//  The Endless Page v2.2 — AI Story Engine
+// ═══════════════════════════════════════════
+
+const GEMINI_MODELS = ['gemini-2.0-flash','gemini-2.0-flash-lite'];
+
+const G = {
+  apiKey:'', aiEnabled:false,
+  mode:'guided', theme:'fantasy',
+  slot:null, story:null,
+  page:1, thinking:false,
+  currentChoices:[],   // stored here, NOT in onclick strings
+};
+
+// ── Prompts ──────────────────────────────
+// Guided: demands 4-6 paragraphs + exactly 3 choices
+const SYS_GUIDED = `You are a masterful literary narrator and dungeon master for an interactive story.
+
+RESPONSE FORMAT — follow this exactly every time:
+1. Write 3 to 4 paragraphs of rich, immersive prose (minimum 170 words). Use vivid sensory detail, strong atmosphere, and a distinct authorial voice. Let each paragraph breathe. Vary sentence length. Make the world feel real and consequential.
+2. After the prose, on a new line, write exactly three choices in this format — no deviation:
+CHOICE_1: [Evocative short action, max 12 words]
+CHOICE_2: [A different approach or direction, max 12 words]
+CHOICE_3: [An unexpected or surprising option, max 12 words]
+
+Never skip the choices. Never write fewer than 3 paragraphs. Keep the story coherent and advance it meaningfully.`;
+
+const SYS_SANDBOX = `You are a masterful literary narrator for an interactive story.
+
+Write 3 to 4 paragraphs of rich, immersive prose (minimum 170 words) responding to the player's action. Use vivid sensory detail, atmosphere, and a strong authorial voice. Make each paragraph substantial. Let moments linger. Vary sentence rhythm. The world should feel alive and the player's choices should matter.
+
+Do NOT provide choices — simply continue the narrative with confidence and consequence.`;
+
+// ── Genre detection ──────────────────────
+const GENRE_KEYS = {
+  scifi:     ['space','ship','planet','robot','cyberpunk','future','tech','galaxy','android','station','alien','laser','quantum','digital','starship','hologram','neon'],
+  horror:    ['dark','fear','ghost','monster','haunted','cursed','blood','shadow','nightmare','demon','undead','terror','malevolent','dread','asylum','creature'],
+  romance:   ['love','heart','longing','kiss','desire','passion','beautiful','tender','ache','yearning','together','apart','feelings','romance'],
+  adventure: ['explore','journey','forest','treasure','quest','mountain','dungeon','ancient','map','discover','ruin','hero','expedition','jungle'],
+  fantasy:   ['magic','wizard','dragon','sword','kingdom','enchant','spell','realm','elf','dwarf','mystical','arcane','sorcery','prophecy'],
+};
+const GENRE_NAMES = {fantasy:'Fantasy',scifi:'Science Fiction',horror:'Horror',romance:'Romance',adventure:'Adventure'};
+
+// ── Theme colour tokens ──────────────────
+const THEMES = {
+  fantasy:   {page:'#f5edd8',page2:'#f0e6cc',ink:'#2a1f0e',ink2:'#4a3728',ink3:'#7a6555',accent:'#8b4513',accent2:'#c8860a',binding:'#5c3317',spine:'#3d2008',gold:'#c8a84b'},
+  scifi:     {page:'#0a0e1a',page2:'#080c16',ink:'#c8e8ff',ink2:'#8ab8d8',ink3:'#4a6888',accent:'#00b4d8',accent2:'#48cae4',binding:'#001f3f',spine:'#00080f',gold:'#00b4d8'},
+  horror:    {page:'#0f0a0a',page2:'#0c0707',ink:'#e8d8d0',ink2:'#b89888',ink3:'#786858',accent:'#8b0000',accent2:'#cc2200',binding:'#1a0000',spine:'#0a0000',gold:'#8b0000'},
+  romance:   {page:'#fdf6f0',page2:'#f8ede3',ink:'#2d1b24',ink2:'#5c3a48',ink3:'#8c6878',accent:'#9b2257',accent2:'#c4517a',binding:'#6b1535',spine:'#4a0e25',gold:'#c4517a'},
+  adventure: {page:'#f2e8d4',page2:'#ebe0c8',ink:'#1a2a18',ink2:'#3a5235',ink3:'#6a8260',accent:'#2d6a2d',accent2:'#4a9e3a',binding:'#1a3d18',spine:'#0f2610',gold:'#8fb84a'},
+};
+
+// ── Colours per slot for bookshelf ───────
+const BOOK_PALETTES = [
+  {bg:'#5c3317',light:'#c8a84b',dark:'#3d2008'},
+  {bg:'#1a3d18',light:'#8fb84a',dark:'#0f2610'},
+  {bg:'#001f3f',light:'#00b4d8',dark:'#00080f'},
+  {bg:'#4a0e25',light:'#c4517a',dark:'#2d0815'},
+  {bg:'#1a0000',light:'#cc2200',dark:'#0a0000'},
+  {bg:'#2a1a5e',light:'#9b7fd4',dark:'#160d36'},
+  {bg:'#1e3a2e',light:'#5dbf8a',dark:'#0e2018'},
+  {bg:'#3a2800',light:'#d4a840',dark:'#1e1400'},
+  {bg:'#2e1a3a',light:'#b47fd4',dark:'#1a0d22'},
+  {bg:'#003333',light:'#40c4b4',dark:'#001a1a'},
+  {bg:'#3a1a00',light:'#d47840',dark:'#1e0d00'},
+  {bg:'#1a1a3a',light:'#7878d4',dark:'#0d0d1e'},
+];
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  const saved = localStorage.getItem('ep_api_key')||'';
+  if(saved){ G.apiKey=saved; G.aiEnabled=true; showShelf(); }
+  const f=document.getElementById('api-field');
+  if(f){
+    if(saved){f.value=saved;f.classList.add('ok');}
+    f.addEventListener('input',e=>{
+      const v=e.target.value.trim();
+      f.className='api-in'+(v.length>10?' ok':'');
+    });
+  }
+});
+
+// ✦ QW1: Escape key closes whichever modal is open
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  const chapterOpen = document.getElementById('modal-overlay').classList.contains('open');
+  if(chapterOpen){ closeModalDirect(); return; }
+  const renameOpen = document.getElementById('rename-overlay');
+  if(renameOpen && renameOpen.style.display==='flex'){ closeRenameModalDirect(); }
+});
+
+// ════════════════════════════════════════
+//  SCREEN HELPERS
+// ════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+
+// ✦ QW3: Dynamic tab title helper
+function setDocTitle(storyTitle){
+  document.title = storyTitle
+    ? 'The Endless Page \u2014 ' + storyTitle
+    : 'The Endless Page';
+}
+
+function showShelf(){
+  setDocTitle(null);  // ✦ QW3: reset tab title to default when on shelf
+  renderShelf();
+  showScreen('screen-shelf');
+}
+
+// ════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════
+function applyTheme(t){
+  const th=THEMES[t]||THEMES.fantasy;
+  const r=document.documentElement;
+  Object.entries(th).forEach(([k,v])=>r.style.setProperty('--'+k,v));
+  const book=document.getElementById('screen-book');
+  if(book) book.setAttribute('data-theme',t);
+}
+function applyThemeToEl(el,t){
+  const th=THEMES[t]||THEMES.fantasy;
+  Object.entries(th).forEach(([k,v])=>el.style.setProperty('--'+k,v));
+}
+function setTheme(t){
+  G.theme=t;
+  document.getElementById('genre-det').textContent=GENRE_NAMES[t]||t;
+  applyThemeToEl(document.getElementById('new-card'),t);
+}
+function detectGenre(text){
+  if(!text||text.length<8) return;
+  const lo=text.toLowerCase();
+  let best=null,bestN=0;
+  Object.entries(GENRE_KEYS).forEach(([th,words])=>{
+    const n=words.filter(w=>lo.includes(w)).length;
+    if(n>bestN){bestN=n;best=th;}
+  });
+  if(best&&bestN>0){
+    G.theme=best;
+    document.getElementById('genre-det').textContent=GENRE_NAMES[best];
+    applyThemeToEl(document.getElementById('new-card'),best);
+  } else {
+    document.getElementById('genre-det').textContent='Fantasy (default)';
+  }
+}
+
+// ════════════════════════════════════════
+//  API KEY
+// ════════════════════════════════════════
+function confirmKey(){
+  const v=document.getElementById('api-field').value.trim();
+  if(v.length<10){toast('Key too short — paste your full Gemini API key');return;}
+  localStorage.setItem('ep_api_key',v);
+  G.apiKey=v; G.aiEnabled=true;
+  toast('API key saved ✓');
+  showShelf();
+}
+function skipKey(){G.apiKey='';G.aiEnabled=false;showShelf();}
+
+// ════════════════════════════════════════
+//  BOOKSHELF RENDERING
+// ════════════════════════════════════════
+function renderShelf(){
+  const unit=document.getElementById('shelf-unit');
+  // Clear old rows but keep walls
+  unit.querySelectorAll('.book-row,.shelf-plank').forEach(el=>el.remove());
+
+  // Gather filled slots + one empty
+  const slots=[];
+  for(let i=0;i<12;i++){
+    const d=loadSlot(i);
+    if(d) slots.push({index:i,data:d});
+  }
+  // find first empty slot for "new" book
+  let emptyIdx=-1;
+  for(let i=0;i<12;i++){ if(!loadSlot(i)){emptyIdx=i;break;} }
+  if(emptyIdx>=0) slots.push({index:emptyIdx,data:null});
+
+  if(slots.length===0){
+    // just the new-book prompt
+    slots.push({index:0,data:null});
+  }
+
+  // Layout: split into rows of up to 8
+  const perRow=Math.min(Math.max(slots.length,4),8);
+  const rows=[];
+  for(let i=0;i<slots.length;i+=perRow) rows.push(slots.slice(i,i+perRow));
+
+  rows.forEach((rowSlots,ri)=>{
+    const row=document.createElement('div');
+    row.className='book-row';
+
+    rowSlots.forEach((slot,si)=>{
+      const pal=BOOK_PALETTES[slot.index%BOOK_PALETTES.length];
+      row.appendChild(makeBook(slot,pal,si,ri));
+    });
+
+    unit.appendChild(row);
+
+    // Plank after each row
+    const plank=document.createElement('div');
+    plank.className='shelf-plank';
+    unit.appendChild(plank);
+  });
+}
+
+function makeBook(slot,pal,si,ri){
+  const wrap=document.createElement('div');
+  wrap.className='shelf-book';
+
+  // Varied sizing
+  const heights=[155,170,160,175,150,165,158,172];
+  const widths=[38,44,36,42,40,46,38,44];
+  const h=heights[si%heights.length];
+  const w=widths[si%widths.length];
+
+  // Occasional tilt and lying books
+  const patterns=['','','','tilt-l','','tilt-r','','','','tilt-l2','',''];
+  const tiltClass=patterns[(si+ri*3)%patterns.length];
+  if(tiltClass) wrap.classList.add(tiltClass);
+
+  // Every 4th book (when there are enough) can be lying flat as a stack
+  const shouldLie = (si===3||si===7) && slot.data;
+  if(shouldLie){
+    wrap.classList.add('lying');
+    wrap.style.marginRight='6px';
+    wrap.style.marginLeft='6px';
+    // lying books are wider than tall visually
+    const body=document.createElement('div');
+    body.className='book-body';
+    body.style.cssText=`width:${h/2}px;height:${w*0.7}px;background:${pal.bg};border:1px solid ${pal.dark}`;
+    const spine=document.createElement('div');
+    spine.className='book-spine';
+    spine.style.background=`rgba(0,0,0,.3)`;
+    const title=document.createElement('div');
+    title.className='book-spine-title';
+    title.style.color=pal.light;
+    title.textContent=slot.data?slot.data.title:'';
+    body.appendChild(spine);
+    body.appendChild(title);
+    wrap.appendChild(body);
+    wrap.onclick=()=>slot.data?continueStory(slot.index):showNewStory(slot.index);
+    return wrap;
+  }
+
+  if(slot.data===null){
+    // Empty / new story book
+    wrap.classList.add('new-slot');
+    const body=document.createElement('div');
+    body.className='book-body';
+    body.style.cssText=`width:${w}px;height:${h}px`;
+    const title=document.createElement('div');
+    title.className='book-spine-title';
+    title.style.cssText=`color:rgba(200,168,75,.5);font-size:9px`;
+    title.textContent='New Story';
+    body.appendChild(title);
+    wrap.appendChild(body);
+    wrap.onclick=()=>showNewStory(slot.index);
+    // Genre tag tooltip
+    wrap.title='Start a new story';
+    return wrap;
+  }
+
+  // Filled book
+  const body=document.createElement('div');
+  body.className='book-body';
+  body.style.cssText=`width:${w}px;height:${h}px;background:linear-gradient(135deg,${pal.bg} 0%,${adjustColor(pal.bg,15)} 100%);border:1px solid ${pal.dark}`;
+  const spine=document.createElement('div');
+  spine.className='book-spine';
+  spine.style.background=`linear-gradient(to right,${pal.dark},rgba(0,0,0,.15))`;
+  const band=document.createElement('div');
+  band.className='book-band';
+  band.style.background=`linear-gradient(90deg,transparent,${pal.light}66,transparent)`;
+  const title=document.createElement('div');
+  title.className='book-spine-title';
+  title.style.color=pal.light;
+  title.textContent=slot.data.title||'Untitled';
+
+  // Delete btn
+  const del=document.createElement('button');
+  del.style.cssText='position:absolute;top:4px;right:4px;background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:10px;padding:2px;display:none;z-index:10';
+  del.textContent='✕';
+  del.title='Delete story';
+  del.onclick=ev=>{ev.stopPropagation();if(confirm('Delete this story?')){deleteSlot(slot.index);renderShelf();}};
+  wrap.addEventListener('mouseenter',()=>del.style.display='block');
+  wrap.addEventListener('mouseleave',()=>del.style.display='none');
+
+  // Genre label at bottom
+  const genre=document.createElement('div');
+  genre.style.cssText=`position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'Cormorant Garamond',serif;font-size:8px;letter-spacing:1px;color:${pal.light}66;`;
+  genre.textContent=(GENRE_NAMES[slot.data.theme]||'').toUpperCase().slice(0,3);
+
+  body.appendChild(spine);
+  body.appendChild(band);
+  body.appendChild(title);
+  body.appendChild(genre);
+  body.appendChild(del);
+  wrap.appendChild(body);
+
+  wrap.title=`${slot.data.title} — ${slot.data.wordCount||0} words`;
+  wrap.onclick=()=>continueStory(slot.index);
+  return wrap;
+}
+
+// Lighten/darken a hex color slightly
+function adjustColor(hex,amount){
+  const n=parseInt(hex.replace('#',''),16);
+  const r=Math.min(255,((n>>16)&0xff)+amount);
+  const g=Math.min(255,((n>>8)&0xff)+amount);
+  const b=Math.min(255,(n&0xff)+amount);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════
+//  SLOT MANAGEMENT
+// ════════════════════════════════════════
+function loadSlot(i){const r=localStorage.getItem(`ep_slot_${i}`);return r?JSON.parse(r):null;}
+function saveSlot(){if(G.slot===null||!G.story)return;localStorage.setItem(`ep_slot_${G.slot}`,JSON.stringify(G.story));}
+function deleteSlot(i){localStorage.removeItem(`ep_slot_${i}`);}
+
+function showNewStory(idx){
+  G.slot=idx; G.theme='fantasy'; G.mode='guided';
+  document.getElementById('premise-in').value='';
+  document.getElementById('genre-det').textContent='—';
+  setMode('guided');
+  applyThemeToEl(document.getElementById('new-card'),'fantasy');
+  setDocTitle(null);  // ✦ QW3: reset tab title on new story screen
+  showScreen('screen-new');
+}
+
+function continueStory(i){
+  const data=loadSlot(i);
+  if(!data)return;
+  G.slot=i; G.story=data; G.theme=data.theme; G.mode=data.mode;
+  G.page=data.pages.length+1;
+  applyTheme(data.theme);
+  setDocTitle(data.title);  // ✦ QW3: set tab title to story title
+  renderBook();
+  showScreen('screen-book');
+  document.getElementById('offline-banner').style.display=G.aiEnabled?'none':'block';
+  document.getElementById('story-in').focus();
+}
+
+// ════════════════════════════════════════
+//  MODE
+// ════════════════════════════════════════
+function setMode(m){
+  G.mode=m;
+  document.getElementById('mb-guided').classList.toggle('on',m==='guided');
+  document.getElementById('mb-sandbox').classList.toggle('on',m==='sandbox');
+  document.getElementById('mode-desc').textContent=m==='guided'
+    ?'The narrator guides your story, offering three paths at each turn. You choose the direction.'
+    :'Total creative freedom. Describe anything — the narrator weaves it into the world.';
+}
+
+// ════════════════════════════════════════
+//  BEGIN STORY
+// ════════════════════════════════════════
+async function beginStory(){
+  const premise=document.getElementById('premise-in').value.trim();
+  if(!premise){toast('Write a premise to begin');return;}
+  G.story={
+    title:'…',premise,
+    theme:G.theme,mode:G.mode,
+    pages:[],wordCount:0,
+    createdAt:new Date().toISOString(),
+  };
+  G.page=1;
+  G.currentChoices=[];
+  saveSlot();
+  applyTheme(G.theme);
+  setDocTitle('…');  // ✦ QW3: loading state tab title while AI generates title
+  showScreen('screen-book');
+  renderBook();
+  document.getElementById('offline-banner').style.display=G.aiEnabled?'none':'block';
+  // Fire title + opening prose in parallel — no extra wait
+  await Promise.all([
+    generateResponse(premise,true),
+    generateTitle(premise),
+  ]);
+}
+
+async function generateTitle(premise){
+  let title=null;
+  if(G.aiEnabled){
+    const sys=`You are a literary title writer. Respond with ONLY the title — no quotes, no explanation, no punctuation at the end. Nothing else.`;
+    const prompt=`Write a short, evocative book title (2–5 words) for a ${GENRE_NAMES[G.theme]||'fiction'} story with this premise:\n\n"${premise}"\n\nThe title should feel like a real published novel — atmospheric, intriguing, memorable.`;
+    title=await callGemini(sys,prompt,30,0.9);
+  }
+  // Sanitise — strip quotes, newlines, trailing punctuation
+  if(title){
+    title=title.replace(/^["'"\u201c\u201d\u2018\u2019]|["'"\u201c\u201d\u2018\u2019]$/g,'')
+               .replace(/\n.*/,'')
+               .replace(/[.!?,;]+$/,'')
+               .trim();
+  }
+  // Fallback: first 3-4 meaningful words of premise
+  if(!title||title.length<2){
+    const words=premise.trim().split(/\s+/).filter(w=>w.length>3).slice(0,4);
+    title=words.length>=2?words.join(' '):premise.trim().split(/\s+/).slice(0,4).join(' ');
+  }
+  G.story.title=title;
+  document.getElementById('book-title').textContent=title;
+  setDocTitle(title);  // ✦ QW3: update tab title once AI returns the real title
+  saveSlot();
+}
+
+// ════════════════════════════════════════
+//  BOOK RENDER
+// ════════════════════════════════════════
+function renderBook(){
+  if(!G.story)return;
+  document.getElementById('book-title').textContent=G.story.title;
+  updateWC();
+  renderHistory();
+  const pages=G.story.pages;
+  if(pages.length>0){
+    renderCurrentPage(pages[pages.length-1]);
+  } else {
+    document.getElementById('story-cur').innerHTML='';
+  }
+  document.getElementById('pgn-right').textContent=`Page ${pages.length||1}`;
+  document.getElementById('pgn-left').textContent=pages.length>1?`Pages 1\u2013${pages.length-1}`:'—';
+}
+
+function renderCurrentPage(pd){
+  const el=document.getElementById('story-cur');
+  let html=`<div class="prose drop" style="animation:pageTurn .4s ease">${formatProse(pd.text)}</div>`;
+
+  // Choices
+  if(G.mode==='guided'&&pd.choices&&pd.choices.length>0){
+    G.currentChoices=pd.choices;
+    html+=`<div class="orn">✦ ✦ ✦</div><div class="choices-wrap">`;
+    html+=`<div class="choices-lbl">What do you do?</div>`;
+    // Use index-based onclick — no JSON in attribute
+    pd.choices.forEach((c,i)=>{
+      html+=`<button class="choice-btn" onclick="chooseByIndex(${i})">${c}</button>`;
+    });
+    html+=`</div>`;
+  }
+  el.innerHTML=html;
+  el.scrollTop=0;
+}
+
+function renderHistory(){
+  const el=document.getElementById('hist-scroll');
+  const pages=G.story?G.story.pages:[];
+  const history=pages.slice(0,-1);
+  if(history.length===0){
+    el.innerHTML=`<div class="hist-empty">The pages of your past<br>will appear here\u2026</div>`;
+    return;
+  }
+  el.innerHTML=history.map((p,i)=>`
+    <div class="hist-entry" onclick="openModal(${i})" title="Click to read in full">
+      ${p.action?`<div class="hist-who">${p.action.slice(0,60)}${p.action.length>60?'\u2026':''}</div>`:''}
+      <div class="hist-snip">${p.text}</div>
+      <div class="hist-read">Read in full ›</div>
+    </div>
+    ${i<history.length-1?'<div class="orn" style="font-size:9px;letter-spacing:3px;margin:8px 0">\u00b7 \u00b7 \u00b7</div>':''}
+  `).join('');
+  el.scrollTop=el.scrollHeight;
+  document.getElementById('pgn-left').textContent=`Pages 1\u2013${history.length}`;
+}
+
+function formatProse(text){
+  return text.split(/\n\n+/).filter(p=>p.trim()).map(p=>`<p>${p.trim()}</p>`).join('');
+}
+
+function updateWC(){
+  if(!G.story)return;
+  const total=G.story.pages.reduce((acc,p)=>acc+(p.text||'').split(/\s+/).length,0);
+  G.story.wordCount=total;
+  document.getElementById('wc').textContent=`${total.toLocaleString()} words`;
+}
+
+// ════════════════════════════════════════
+//  CHAPTER MODAL
+// ════════════════════════════════════════
+function openModal(pageIndex){
+  const p=G.story.pages[pageIndex];
+  if(!p)return;
+  document.getElementById('modal-title').textContent=`Page ${pageIndex+1}`;
+  document.getElementById('modal-action').textContent=p.action?`› ${p.action}`:'Opening';
+  document.getElementById('modal-prose').innerHTML=formatProse(p.text);
+  // Apply theme vars to modal card
+  const card=document.querySelector('.modal-card');
+  applyThemeToEl(card,G.theme);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){
+  if(e.target===document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════
+//  INPUT
+// ════════════════════════════════════════
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitAction();}
+}
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,90)+'px';
+}
+async function submitAction(){
+  const inp=document.getElementById('story-in');
+  const action=inp.value.trim();
+  if(!action||G.thinking)return;
+  inp.value=''; inp.style.height='34px';
+  await generateResponse(action,false);
+}
+// Choice by index — avoids any quote escaping issues
+function chooseByIndex(i){
+  const choice=G.currentChoices[i];
+  if(!choice)return;
+  document.getElementById('story-in').value=choice;
+  submitAction();
+}
+
+// ✦ QW2: Enable/disable the send button to signal busy state
+function setSendState(disabled){
+  const btn=document.getElementById('send-btn');
+  if(!btn)return;
+  btn.disabled=disabled;
+}
+
+// ════════════════════════════════════════
+//  AI GENERATION
+// ════════════════════════════════════════
+async function generateResponse(action,isOpening){
+  if(G.thinking)return;
+  G.thinking=true;
+  setSendState(true);  // ✦ QW2: disable send during generation
+
+  // Show thinking
+  const cur=document.getElementById('story-cur');
+  cur.innerHTML=`<div class="thinking-row"><div class="dots"><span></span><span></span><span></span></div>The narrator writes…</div>`;
+
+  let text=null;
+  if(G.aiEnabled){
+    const sys=G.mode==='guided'?SYS_GUIDED:SYS_SANDBOX;
+    const ctx=buildContext(action,isOpening);
+    text=await callGemini(sys,ctx,900,0.88);
+  }
+
+  // Fallback prose if AI is offline
+  if(!text){
+    if(G.mode==='guided'){
+      text=isOpening
+        ?`The world holds its breath as your story stirs to life.\n\n${action}\n\nThe air shifts around you — something ancient and patient takes notice. There is a weight to this moment, as though the universe itself has paused to see what you will do next. The ground beneath your feet feels more real than it has any right to be. Whatever brought you here, it was not an accident.\n\nYour heart steadies. Your eyes adjust. The world comes into focus, and with it comes the unmistakable sense that everything is about to change.\n\nWherever this path leads, it has already begun.\n\nCHOICE_1: Step forward and take in your surroundings\nCHOICE_2: Search the immediate area for anything useful\nCHOICE_3: Wait and listen before making a move`
+        :`You act, and the world responds in kind.\n\nThe moment ripples outward from your decision like water from a stone. Nothing is quite as it was a moment ago. The story has bent itself around your choice and now stretches ahead in directions you didn't expect — some familiar, some strange, all of them yours to navigate.\n\nA door has opened. Another has closed. The world tilts slightly on its axis and then rights itself, waiting to see what you do next. Every story is made of moments like this: small, irreversible, consequential.\n\nYou have moved the needle. The question now is: what happens because of it?\n\nCHOICE_1: Press onward with purpose\nCHOICE_2: Pause and assess what just changed\nCHOICE_3: Take an unexpected turn`;
+    } else {
+      text=isOpening
+        ?`The world holds its breath.\n\n${action}\n\nSomething shifts — a sound at the edge of hearing, a change in the quality of light. The ordinary rules seem to loosen their grip, and in that loosening you feel the particular electricity of a story beginning. Your senses are sharper than usual. Every detail insists on being noticed.\n\nThis is how it starts. Not with a bang, but with a becoming.\n\nThe world is ready for you. The only question is whether you are ready for it.`
+        :`Your action cuts through the silence like a blade through silk.\n\nThe world takes a breath and then answers, not with words but with consequence. The thing you have done ripples forward into the story, changing its shape, pulling new possibilities into existence while closing others off forever. This is how stories work: every choice is both an ending and a beginning.\n\nYou stand in the aftermath of your own decision. Around you, the world rearranges itself. Somewhere ahead, something is already responding — whether it will be friend or foe or something stranger altogether remains to be seen.\n\nThe story moves on. So must you.`;
+    }
+  }
+
+  const{prose,choices}=parseResponse(text);
+  G.currentChoices=choices;
+
+  G.story.pages.push({
+    action:isOpening?null:action,
+    text:prose,choices,
+    timestamp:Date.now(),
+  });
+  G.page=G.story.pages.length+1;
+  G.thinking=false;
+  setSendState(false);  // ✦ QW2: re-enable send when generation is done
+
+  updateWC();
+  saveSlot();
+  renderHistory();
+  renderCurrentPage(G.story.pages[G.story.pages.length-1]);
+  document.getElementById('pgn-right').textContent=`Page ${G.story.pages.length}`;
+}
+
+function buildContext(action,isOpening){
+  const s=G.story;
+  const recent=s.pages.slice(-4).map(p=>
+    (p.action?`PLAYER: ${p.action}\n`:'')+`NARRATOR:\n${p.text}`
+  ).join('\n\n---\n\n');
+
+  if(isOpening){
+    return `STORY PREMISE: ${s.premise}\n\nGENRE/TONE: ${GENRE_NAMES[s.theme]||'Fantasy'} — lean fully into this genre's atmosphere and conventions.\n\nThis is PAGE ONE. Open the story dramatically and with full commitment — transform the premise into vivid, immersive prose. Do not restate the premise literally. Begin in the middle of a moment.`;
+  }
+  return `STORY PREMISE: ${s.premise}\nGENRE: ${GENRE_NAMES[s.theme]||'Fantasy'}\n\nSTORY SO FAR:\n${recent||'(story just beginning)'}\n\n---\n\nPLAYER ACTION: ${action}\n\nContinue the story. Make the player's action matter. Be consequential.`;
+}
+
+function parseResponse(text){
+  if(G.mode==='sandbox') return{prose:text.trim(),choices:[]};
+  // Primary: strict CHOICE_1/2/3 format
+  let reg=/CHOICE_[123]:\s*(.+)/g;
+  let choices=[]; let m;
+  while((m=reg.exec(text))!==null) choices.push(m[1].trim());
+  // Secondary: looser casing/format variants
+  if(choices.length===0){
+    const loose=/(?:choice\s*[123]|option\s*[123]|\*\*choice\s*[123]\*\*)[:\s]+(.+)/gi;
+    while((m=loose.exec(text))!==null) choices.push(m[1].trim());
+  }
+  // Tertiary: plain numbered list at end of text
+  if(choices.length===0){
+    const numbered=/^[123][.)]\s+(.+)$/gm;
+    while((m=numbered.exec(text))!==null) choices.push(m[1].trim());
+  }
+  // Strip all choice lines from prose
+  const prose=text
+    .replace(/CHOICE_[123]:.+/gi,'')
+    .replace(/(?:choice|option)\s*[123][:\s].+/gi,'')
+    .replace(/^[123][.)]\s+.+$/gm,'')
+    .replace(/\*\*choice\s*[123]\*\*.+/gi,'')
+    .replace(/\n{3,}/g,'\n\n').trim();
+  return{prose,choices};
+}
+
+// ════════════════════════════════════════
+//  GEMINI (battle-tested from Galactic Conquest)
+// ════════════════════════════════════════
+async function callGemini(sys,user,maxTokens=400,temp=0.88){
+  if(!G.apiKey)return null;
+  for(const model of GEMINI_MODELS){
+    try{
+      const body={
+        contents:[{role:'user',parts:[{text:user}]}],
+        generationConfig:{maxOutputTokens:maxTokens,temperature:temp}
+      };
+      if(sys) body.system_instruction={parts:[{text:sys}]};
+      const res=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${G.apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}
+      );
+      const d=await res.json();
+      if(!res.ok){
+        const msg=d?.error?.message||`HTTP ${res.status}`;
+        if(msg.toLowerCase().includes('api key')||msg.toLowerCase().includes('invalid')||res.status===400){
+          toast('API key rejected — check your key');return null;
+        }
+        continue;
+      }
+      const txt=d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||null;
+      if(txt)return txt;
+    }catch(e){
+      if(model===GEMINI_MODELS[GEMINI_MODELS.length-1]) toast('Network error — check connection');
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════
+//  TTS
+// ════════════════════════════════════════
+let ttsOn=false;
+function toggleTTS(){
+  ttsOn=!ttsOn;
+  document.getElementById('tts-tb').classList.toggle('on',ttsOn);
+  document.getElementById('tts-sm').classList.toggle('on',ttsOn);
+  document.getElementById('tts-tb').textContent=ttsOn?'🔇 Mute':'🔊 Listen';
+  if(ttsOn){
+    speakLatest();
+  } else {
+    if(window.speechSynthesis)window.speechSynthesis.cancel();
+  }
+}
+function speakLatest(){
+  if(!G.story||!G.story.pages.length||!window.speechSynthesis)return;
+  const p=G.story.pages[G.story.pages.length-1];
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(p.text);
+  u.rate=0.88;u.pitch=0.95;
+  window.speechSynthesis.speak(u);
+}
+
+// ════════════════════════════════════════
+//  RENAME MODAL
+// ════════════════════════════════════════
+let renameSlotIndex=null;
+function openRenameModal(slotIndex){
+  renameSlotIndex=slotIndex;
+  const data=slotIndex===G.slot&&G.story ? G.story : loadSlot(slotIndex);
+  if(!data) return;
+  const inp=document.getElementById('rename-input');
+  inp.value=data.title||'';
+  // Apply current theme to modal card
+  const card=document.getElementById('rename-card');
+  const th=THEMES[data.theme||G.theme]||THEMES.fantasy;
+  Object.entries(th).forEach(([k,v])=>card.style.setProperty('--'+k,v));
+  const ov=document.getElementById('rename-overlay');
+  ov.style.display='flex';
+  setTimeout(()=>{ inp.focus(); inp.select(); },60);
+}
+function closeRenameModal(e){
+  if(e.target===document.getElementById('rename-overlay')) closeRenameModalDirect();
+}
+function closeRenameModalDirect(){
+  document.getElementById('rename-overlay').style.display='none';
+  renameSlotIndex=null;
+}
+function confirmRename(){
+  const newTitle=document.getElementById('rename-input').value.trim();
+  if(!newTitle){ toast('Please enter a title'); return; }
+  if(renameSlotIndex===null) return;
+  // Update live story if it's the active one
+  if(renameSlotIndex===G.slot&&G.story){
+    G.story.title=newTitle;
+    document.getElementById('book-title').textContent=newTitle;
+    setDocTitle(newTitle);  // ✦ QW3: keep tab title in sync when story is renamed
+    saveSlot();
+  } else {
+    // Update saved slot directly
+    const data=loadSlot(renameSlotIndex);
+    if(data){ data.title=newTitle; localStorage.setItem('ep_slot_'+renameSlotIndex,JSON.stringify(data)); }
+  }
+  closeRenameModalDirect();
+  toast('Story renamed \u2713');
+  // Re-render shelf if we're on it
+  if(document.getElementById('screen-shelf').classList.contains('active')) renderShelf();
+}
+
+// ════════════════════════════════════════
+//  ✦ QW5: DOWNLOAD STORY AS PLAIN TEXT
+// ════════════════════════════════════════
+function downloadStory(){
+  if(!G.story||!G.story.pages.length){
+    toast('No pages to download yet');
+    return;
+  }
+  const title=G.story.title||'Untitled';
+  const lines=[];
+
+  // Header block
+  lines.push(title.toUpperCase());
+  lines.push('='.repeat(Math.min(title.length,60)));
+  lines.push('');
+  lines.push('Genre: '+(GENRE_NAMES[G.story.theme]||G.story.theme)+'  |  Mode: '+(G.story.mode==='guided'?'Guided':'Sandbox')+'  |  Words: '+(G.story.wordCount||0));
+  lines.push('Premise: '+G.story.premise);
+  lines.push('');
+  lines.push('');
+
+  // Pages
+  G.story.pages.forEach((p,i)=>{
+    lines.push('\u2014 Page '+(i+1)+' \u2014');
+    if(p.action) lines.push('> '+p.action);
+    lines.push('');
+    lines.push(p.text);
+    lines.push('');
+    lines.push('');
+  });
+
+  // Footer
+  lines.push('\u2500'.repeat(40));
+  lines.push('Created with The Endless Page v2.2  \u2022  github.com/LordJuvens');
+
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  // Sanitise filename: keep alphanumeric, spaces → underscores
+  const safe=(title).replace(/[^a-z0-9\s\-]/gi,'').replace(/\s+/g,'_').toLowerCase()||'story';
+  a.download=safe+'.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Story downloaded \u2713');
+}
+
+// ════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
